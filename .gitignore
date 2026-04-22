@@ -1,0 +1,19 @@
+# Credenciais — NUNCA devem ir para o repositório
+.env
+browser.json
+firebase-credentials.json
+ 
+# SVGs gerados automaticamente (não precisam ser versionados)
+themes/*_UPDATED.svg
+ 
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+ 
+# IDEs
+.vscode/
+.idea/

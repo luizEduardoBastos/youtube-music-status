@@ -15,11 +15,11 @@ import time
 import urllib
 from ytmusicapi import YTMusic
 
-ytmusic = YTMusic('YOUR BROWSER.JSON FILE')
+ytmusic = YTMusic('browser.json')
 
-cred = credentials.Certificate('YOUR FIREBASE CRED JSON FILE')
+cred = credentials.Certificate('firebase-credentials.json')
 firebase_admin.initialize_app(cred, {
-    'storageBucket': 'YOUR FIREBASE PROJECT URL'
+    'storageBucket': 'music-profile-aaae2.firebasestorage.app'
 })
 
 YouTube_Music_is_opened = None
@@ -36,6 +36,11 @@ def receive_status():
         YouTube_Music_is_opened = False
         print(YouTube_Music_is_opened)
         recent_songs = ytmusic.get_history()
+
+        recent_songs = ytmusic.get_history()
+
+        if not recent_songs:
+            return jsonify({'error': 'No history found'}), 404
 
         playback = recent_songs[0]
 
@@ -56,11 +61,11 @@ def receive_status():
         
         update_svg_with_data_recently_played("themes/recentlyPlayed.svg", "themes/YouTube_Music_UI_BAR_UPDATED.svg", recent_song_title, recent_song_artist, recent_song_thumbnail_url, hex_color)
 
-        bucket_name = "what-am-i-listening"
+        bucket_name = "music-profile-aaae2.firebasestorage.app"
         source_file_name = "themes/YouTube_Music_UI_BAR_UPDATED.svg"
         destination_blob_name = "listening-on-ytmusic.svg"
         
-        bucket = storage.bucket()
+        bucket = storage.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
 
         blob.upload_from_filename(source_file_name)
@@ -91,15 +96,14 @@ def receive_status():
         print("Dominant color (HEX):", hex_color)
         old_color = "#eb2121"
 
-        
         update_svg_with_data("themes/YouTube_Music_UI.svg", "themes/YouTube_Music_UI_UPDATED.svg", recent_song_title, recent_song_artist, recent_song_thumbnail_url, hex_color)
         overwrite_bar_background("themes/YouTube_Music_UI_UPDATED.svg", "themes/YouTube_Music_UI_BAR_UPDATED.svg", old_color, hex_color)
 
-        bucket_name = "what-am-i-listening"
+        bucket_name = "music-profile-aaae2.firebasestorage.app"
         source_file_name = "themes/YouTube_Music_UI_BAR_UPDATED.svg"
         destination_blob_name = "listening-on-ytmusic.svg"
         
-        bucket = storage.bucket()
+        bucket = storage.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
 
         blob.upload_from_filename(source_file_name)
@@ -107,8 +111,7 @@ def receive_status():
         blob.make_public()
 
         print(f"Public URL: {blob.public_url}")
-        return jsonify({'message': 'SVG changed', 'url': blob.public_url}), 200
-        
+        return jsonify({'message': 'SVG changed', 'url': blob.public_url}), 200 
 
     print("ÇIKTI")    
     return "Stataus received", 200
@@ -116,7 +119,7 @@ def receive_status():
 
 def download_and_resize_image_base64(image_url, size=(300, 300)):
     
-    response = requests.get(image_url)
+    response = requests.get(image_url, timeout=10)
     img = Image.open(BytesIO(response.content))
     img = img.resize(size, Image.LANCZOS)
     
@@ -128,7 +131,7 @@ def download_and_resize_image_base64(image_url, size=(300, 300)):
 
 
 def get_dominant_color_from_thumbnail(thumbnail_url):
-    response = requests.get(thumbnail_url)
+    response = requests.get(thumbnail_url, timeout=10)
     img = BytesIO(response.content)
     
     color_thief = ColorThief(img)

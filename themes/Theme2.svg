@@ -1,0 +1,193 @@
+<svg width="400" height="320" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <foreignObject width="400" height="320">
+    <xhtml:div xmlns="http://www.w3.org/1999/xhtml">
+      <xhtml:style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        .container {
+          background: #0f0f14;
+          border-radius: 16px;
+          width: 400px;
+          height: 320px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        .header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 14px 16px 10px;
+        }
+        .yt-icon {
+          width: 28px;
+          height: 28px;
+          background: #ff0000;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .yt-icon svg { width: 14px; height: 14px; }
+        .playing-label {
+          color: #ffffff;
+          font-size: 15px;
+          font-weight: 600;
+        }
+        .thumbnail-wrapper {
+          width: 100%;
+          height: 170px;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+        .thumbnail-wrapper img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .info {
+          padding: 12px 16px 6px;
+          flex: 1;
+        }
+        .artist {
+          color: #ffffff;
+          font-size: 15px;
+          font-weight: 700;
+          line-height: 1.3;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .song {
+          color: #aaaaaa;
+          font-size: 12px;
+          margin-top: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .bars-container {
+          display: flex;
+          align-items: flex-end;
+          gap: 2px;
+          padding: 6px 16px 14px;
+          height: 48px;
+        }
+        .bar {
+          background: #eb2121;
+          bottom: 1px;
+          height: 3px;
+          position: relative;
+          width: 5px;
+          border-radius: 2px 2px 0 0;
+          animation: sound 0ms -800ms linear infinite alternate;
+        }
+        @keyframes sound {
+          0%   { height: 3px; }
+          100% { height: 36px; }
+        }
+        .bar:nth-child(1)  { animation-duration: 474ms; }
+        .bar:nth-child(2)  { animation-duration: 433ms; }
+        .bar:nth-child(3)  { animation-duration: 407ms; }
+        .bar:nth-child(4)  { animation-duration: 458ms; }
+        .bar:nth-child(5)  { animation-duration: 400ms; }
+        .bar:nth-child(6)  { animation-duration: 427ms; }
+        .bar:nth-child(7)  { animation-duration: 441ms; }
+        .bar:nth-child(8)  { animation-duration: 419ms; }
+        .bar:nth-child(9)  { animation-duration: 487ms; }
+        .bar:nth-child(10) { animation-duration: 442ms; }
+        .bar:nth-child(11) { animation-duration: 460ms; }
+        .bar:nth-child(12) { animation-duration: 395ms; }
+        .bar:nth-child(13) { animation-duration: 416ms; }
+        .bar:nth-child(14) { animation-duration: 453ms; }
+        .bar:nth-child(15) { animation-duration: 437ms; }
+        .bar:nth-child(16) { animation-duration: 476ms; }
+        .bar:nth-child(17) { animation-duration: 411ms; }
+        .bar:nth-child(18) { animation-duration: 465ms; }
+        .bar:nth-child(19) { animation-duration: 430ms; }
+        .bar:nth-child(20) { animation-duration: 448ms; }
+        .bar:nth-child(21) { animation-duration: 420ms; }
+        .bar:nth-child(22) { animation-duration: 455ms; }
+        .bar:nth-child(23) { animation-duration: 390ms; }
+        .bar:nth-child(24) { animation-duration: 435ms; }
+        .bar:nth-child(25) { animation-duration: 445ms; }
+        .bar:nth-child(26) { animation-duration: 468ms; }
+        .bar:nth-child(27) { animation-duration: 410ms; }
+        .bar:nth-child(28) { animation-duration: 480ms; }
+        .bar:nth-child(29) { animation-duration: 422ms; }
+        .bar:nth-child(30) { animation-duration: 439ms; }
+        .bar:nth-child(31) { animation-duration: 470ms; }
+        .bar:nth-child(32) { animation-duration: 415ms; }
+        .bar:nth-child(33) { animation-duration: 457ms; }
+        .bar:nth-child(34) { animation-duration: 432ms; }
+        .bar:nth-child(35) { animation-duration: 443ms; }
+        .bar:nth-child(36) { animation-duration: 425ms; }
+        .bar:nth-child(37) { animation-duration: 462ms; }
+        .bar:nth-child(38) { animation-duration: 408ms; }
+        .bar:nth-child(39) { animation-duration: 450ms; }
+        .bar:nth-child(40) { animation-duration: 472ms; }
+      </xhtml:style>
+      <xhtml:div class="container">
+        <xhtml:div class="header">
+          <xhtml:div class="yt-icon">
+            <xhtml:svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <xhtml:path d="M8 5v14l11-7z"/>
+            </xhtml:svg>
+          </xhtml:div>
+          <xhtml:div class="playing-label">Now playing</xhtml:div>
+        </xhtml:div>
+        <xhtml:div class="thumbnail-wrapper">
+          <xhtml:a target="_BLANK" href="#">
+            <xhtml:img src="https://via.placeholder.com/400x170/333/fff?text=thumbnail" alt="thumbnail"/>
+          </xhtml:a>
+        </xhtml:div>
+        <xhtml:div class="info">
+          <xhtml:div class="artist">See You Again (feat. Charlie Puth)</xhtml:div>
+          <xhtml:div class="song">Wiz Khalifa</xhtml:div>
+        </xhtml:div>
+        <xhtml:div class="bars-container">
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+          <xhtml:div class="bar"></xhtml:div>
+        </xhtml:div>
+      </xhtml:div>
+    </xhtml:div>
+  </foreignObject>
+</svg>

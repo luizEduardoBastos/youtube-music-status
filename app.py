@@ -11,13 +11,15 @@ import os
 from PIL import Image
 import re
 import requests
+from threading import Lock
 from ytmusicapi import YTMusic
 
-# ─────────────────────────────────────────────
-# Configuração
-# ─────────────────────────────────────────────
 
 load_dotenv()
+
+upload_lock = Lock()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 ytmusic = YTMusic(os.getenv('YTMUSIC_BROWSER'))
 
@@ -26,7 +28,7 @@ firebase_admin.initialize_app(cred, {
     'storageBucket': os.getenv('FIREBASE_BUCKET')
 })
 
-BLOB_NAME      = os.getenv('BLOB_NAME', 'listening-on-ytmusic.svg')
+BLOB_NAME       = os.getenv('BLOB_NAME', 'listening-on-ytmusic.svg')
 FIREBASE_BUCKET = os.getenv('FIREBASE_BUCKET')
 
 YouTube_Music_is_opened = None
@@ -34,65 +36,19 @@ YouTube_Music_is_opened = None
 app = Flask(__name__)
 CORS(app)
 
-
-# ─────────────────────────────────────────────
-# Configuração dos temas
-# Cada tema tem:
-#   svg_template : arquivo SVG base (não modificado)
-#   svg_output   : arquivo SVG gerado
-#   blob_name    : nome do arquivo no Firebase Storage
-#   title_class  : classe CSS do elemento de título
-#   artist_class : classe CSS do elemento de artista
-#   has_bars     : se o tema usa barras animadas via overwrite_bar_background
-# ─────────────────────────────────────────────
-
 THEMES = [
     {
-        'name'         : 'Classic',
-        'svg_template' : 'themes/YouTube_Music_UI.svg',
-        'svg_output'   : 'themes/Classic_UPDATED.svg',
-        'blob_name'    : BLOB_NAME,
+        'name'         : 'Theme_Card_HTML',
+        'svg_template' : os.path.join(BASE_DIR, 'themes', 'Theme_Card_HTML.html'),
+        'svg_output'   : os.path.join(BASE_DIR, 'themes', 'Theme_Card_HTML_UPDATED.svg'),
+        'blob_name'    : 'listening-on-ytmusic.svg',
         'title_class'  : 'artist',
         'artist_class' : 'song',
         'has_bars'     : True,
-        'active_only'  : True,   # só exibido quando o YT Music está aberto
-    },
-    {
-        'name'         : 'Recently Played',
-        'svg_template' : 'themes/recentlyPlayed.svg',
-        'svg_output'   : 'themes/RecentlyPlayed_UPDATED.svg',
-        'blob_name'    : BLOB_NAME,
-        'title_class'  : 'artist',
-        'artist_class' : 'song',
-        'has_bars'     : False,
-        'active_only'  : False,  # só exibido quando o YT Music está fechado
-    },
-    {
-        'name'         : 'Theme2',
-        'svg_template' : 'themes/Theme2.svg',
-        'svg_output'   : 'themes/Theme2_UPDATED.svg',
-        'blob_name'    : 'listening-theme2.svg',
-        'title_class'  : 'artist',
-        'artist_class' : 'song',
-        'has_bars'     : True,
-        'active_only'  : None,   # exibido sempre
-    },
-    {
-        'name'         : 'Theme3_Card',
-        'svg_template' : 'themes/Theme3_Card.svg',
-        'svg_output'   : 'themes/Theme3_Card_UPDATED.svg',
-        'blob_name'    : 'listening-theme3-card.svg',
-        'title_class'  : 'artist',
-        'artist_class' : 'song',
-        'has_bars'     : True,
-        'active_only'  : None,   # exibido sempre
+        'active_only'  : None,
     },
 ]
 
-
-# ─────────────────────────────────────────────
-# Rota principal
-# ─────────────────────────────────────────────
 
 @app.route('/status', methods=['POST'])
 def receive_status():
@@ -111,16 +67,15 @@ def receive_status():
 
     print(f"YouTube_Music_is_opened = {YouTube_Music_is_opened}")
 
-    # Busca histórico uma única vez
     recent_songs = ytmusic.get_history()
     if not recent_songs:
         return jsonify({'error': 'No history found'}), 404
 
-    recent_song_vid_id     = recent_songs[0]['videoId']
-    recent_song            = ytmusic.get_song(recent_song_vid_id)
-    recent_song_title      = recent_songs[0]['title']
-    recent_song_artist     = recent_song['videoDetails']['author']
-    recent_song_thumb_url  = recent_song['videoDetails']['thumbnail']['thumbnails'][-1]['url']
+    recent_song_vid_id    = recent_songs[0]['videoId']
+    recent_song           = ytmusic.get_song(recent_song_vid_id)
+    recent_song_title     = recent_songs[0]['title']
+    recent_song_artist    = recent_song['videoDetails']['author']
+    recent_song_thumb_url = recent_song['videoDetails']['thumbnail']['thumbnails'][-1]['url']
 
     print(f"Música: {recent_song_title} | Artista: {recent_song_artist}")
 
@@ -128,86 +83,139 @@ def receive_status():
     hex_color      = rgb_to_hex(dominant_color)
     print(f"Cor dominante (HEX): {hex_color}")
 
-    urls = {}
+    urls   = {}
     bucket = storage.bucket(FIREBASE_BUCKET)
 
     for theme in THEMES:
-        # Filtra temas pelo estado do YT Music
         if theme['active_only'] is True and not YouTube_Music_is_opened:
             continue
         if theme['active_only'] is False and YouTube_Music_is_opened:
             continue
 
         update_svg(
-            svg_file     = theme['svg_template'],
-            output_file  = theme['svg_output'],
-            song_title   = recent_song_title,
-            artist_name  = recent_song_artist,
-            thumbnail_url= recent_song_thumb_url,
-            hex_color    = hex_color,
-            title_class  = theme['title_class'],
-            artist_class = theme['artist_class'],
-            has_bars     = theme['has_bars'],
+            svg_file      = theme['svg_template'],
+            output_file   = theme['svg_output'],
+            song_title    = recent_song_title,
+            artist_name   = recent_song_artist,
+            thumbnail_url = recent_song_thumb_url,
+            hex_color     = hex_color,
+            title_class   = theme['title_class'],
+            artist_class  = theme['artist_class'],
+            has_bars      = theme['has_bars'],
         )
 
-        blob = bucket.blob(theme['blob_name'])
-        blob.upload_from_filename(theme['svg_output'])
-        blob.make_public()
-        urls[theme['name']] = blob.public_url
+        with upload_lock:
+            blob = bucket.blob(theme['blob_name'])
+            try:
+                blob.delete()
+            except Exception:
+                pass
+            blob.upload_from_filename(
+                theme['svg_output'],
+                content_type='image/svg+xml',
+            )
+            blob.cache_control = "no-cache, no-store, must-revalidate"
+            blob.patch()
+
+        # Recarrega os metadados do blob do servidor
+        print(f"public_url: {blob.public_url}")
+        print(f"content_type no servidor: {blob.content_type}")
+        print(f"cache_control no servidor: {blob.cache_control}")
+
         print(f"[{theme['name']}] URL pública: {blob.public_url}")
 
     return jsonify({'message': 'SVGs updated', 'urls': urls}), 200
 
 
-# ─────────────────────────────────────────────
-# Função genérica de atualização de SVG
-# ─────────────────────────────────────────────
+def safe_sub(class_name, new_text, content):
+    def replacer(m):
+        return m.group(1) + new_text
+    return re.sub(
+        r'(class="' + class_name + r'"[^>]*>)[^<]*',
+        replacer,
+        content
+    )   
 
+# Em update_svg, remova a condição especial para .html:
 def update_svg(svg_file, output_file, song_title, artist_name,
                thumbnail_url, hex_color, title_class, artist_class, has_bars):
 
-    ns = {
-        'svg'  : 'http://www.w3.org/2000/svg',
-        'xlink': 'http://www.w3.org/1999/xlink',
-        'xhtml': 'http://www.w3.org/1999/xhtml',
-    }
-
-    tree = etree.parse(svg_file)
-    root = tree.getroot()
+    # Agora trata direto como SVG (não precisa mais do if .html)
+    with open(svg_file, 'r', encoding='utf-8') as f:
+        content = f.read()
 
     base64_thumbnail = download_and_resize_image_base64(thumbnail_url)
 
-    # Título da música
-    for el in root.findall(f".//xhtml:div[@class='{title_class}']", namespaces=ns):
-        el.text = song_title
-    print(f"Título atualizado: {song_title}")
+    content = safe_sub(title_class, song_title, content)
+    content = safe_sub(artist_class, artist_name, content)
 
-    # Nome do artista
-    for el in root.findall(f".//xhtml:div[@class='{artist_class}']", namespaces=ns):
-        el.text = artist_name
-    print(f"Artista atualizado: {artist_name}")
+    parts = content.split('class="thumb"', 1)
+    if len(parts) == 2:
+        after_thumb = re.sub(r'src="[^"]*"', f'src="{base64_thumbnail}"', parts[1], count=1)
+        content = parts[0] + 'class="thumb"' + after_thumb
 
-    # Thumbnail
-    for el in root.findall(".//xhtml:a[@target='_BLANK']//xhtml:img", namespaces=ns):
-        el.attrib['src'] = base64_thumbnail
-    print("Thumbnail atualizada")
-
-    # Status "Now playing" / "Recently played"
     label = "Now playing on" if YouTube_Music_is_opened else "Recently played on"
-    for el in root.findall(".//xhtml:div[@class='playing']", namespaces=ns):
-        el.text = label
-    print(f"Status atualizado: {label}")
+    content = safe_sub('playing', label, content)
 
-    tree.write(output_file, pretty_print=True)
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(content)
 
-    # Cor das barras (temas que usam overwrite)
     if has_bars:
         overwrite_bar_color(output_file, output_file, hex_color)
 
 
-# ─────────────────────────────────────────────
-# Utilitários
-# ─────────────────────────────────────────────
+def update_html(svg_file, output_file, song_title, artist_name,
+                thumbnail_url, hex_color, title_class, artist_class, has_bars):
+
+    with open(svg_file, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    base64_thumbnail = download_and_resize_image_base64(thumbnail_url)
+
+    # Título
+    content = re.sub(
+        r'(class="' + title_class + r'"[^>]*>)[^<]*',
+        lambda m: m.group(1) + song_title,
+        content
+    )
+
+    # Artista
+    content = re.sub(
+        r'(class="' + artist_class + r'"[^>]*>)[^<]*',
+        lambda m: m.group(1) + artist_name,
+        content
+    )
+
+    # Thumbnail — divide em 2 partes pelo marcador "class="thumb""
+    # e substitui o src apenas dentro da tag da thumbnail
+    parts = content.split('class="thumb"', 1)
+    if len(parts) == 2:
+        before_thumb = parts[0]
+        after_thumb  = parts[1]
+        # dentro de after_thumb, substitui o próximo src="..."
+        after_thumb = re.sub(
+            r'src="[^"]*"',
+            f'src="{base64_thumbnail}"',
+            after_thumb,
+            count=1
+        )
+        content = before_thumb + 'class="thumb"' + after_thumb
+    print("Thumbnail atualizada")
+
+    # Status label
+    label = "Now playing on" if YouTube_Music_is_opened else "Recently played on"
+    content = re.sub(
+        r'(class="playing"[^>]*>)[^<]*',
+        lambda m: m.group(1) + label,
+        content
+    )
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    if has_bars:
+        overwrite_bar_color(output_file, output_file, hex_color)
+
 
 def download_and_resize_image_base64(image_url, size=(300, 300)):
     response = requests.get(image_url, timeout=10)
@@ -227,7 +235,6 @@ def rgb_to_hex(rgb):
 
 
 def overwrite_bar_color(svg_file, output_file, new_color):
-    """Substitui a cor de fundo das barras animadas no bloco CSS interno."""
     try:
         with open(svg_file, 'r', encoding='utf-8') as f:
             content = f.read()

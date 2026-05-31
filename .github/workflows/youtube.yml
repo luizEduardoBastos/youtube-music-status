@@ -24,10 +24,6 @@ jobs:
       - name: Install dependencies
         run: pip install colorthief firebase-admin Pillow python-dotenv requests ytmusicapi
 
-      # ------------------------------------------------------------------
-      # Gravar credenciais com printf para preservar o JSON intacto.
-      # O método 'echo' quebra JSONs com aspas e caracteres especiais.
-      # ------------------------------------------------------------------
       - name: Write Firebase credentials file
         env:
           FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
@@ -37,6 +33,25 @@ jobs:
         env:
           YTMUSIC_BROWSER_JSON: ${{ secrets.YTMUSIC_BROWSER_JSON }}
         run: printf '%s' "$YTMUSIC_BROWSER_JSON" > ytmusic_browser.json
+
+      # ------------------------------------------------------------------
+      # DEBUG: confirma se os arquivos foram gravados corretamente.
+      # Mostra o tamanho e as primeiras letras (sem expor a secret inteira).
+      # Remova este step após confirmar que está funcionando.
+      # ------------------------------------------------------------------
+      - name: Debug credential files
+        run: |
+          echo "=== firebase_credentials.json ==="
+          wc -c firebase_credentials.json
+          head -c 30 firebase_credentials.json && echo ""
+
+          echo "=== ytmusic_browser.json ==="
+          wc -c ytmusic_browser.json
+          head -c 30 ytmusic_browser.json && echo ""
+
+          echo "=== Validar JSON ==="
+          python -c "import json; json.load(open('firebase_credentials.json'))" && echo "Firebase JSON OK" || echo "Firebase JSON INVÁLIDO"
+          python -c "import json; json.load(open('ytmusic_browser.json'))" && echo "YTMusic JSON OK" || echo "YTMusic JSON INVÁLIDO"
 
       - name: Run update script
         env:
@@ -52,7 +67,6 @@ jobs:
           new=$((current + 1))
           sed -i "s/alt=media&v=${current}/alt=media\&v=${new}/" README.md
           echo "new_version=${new}" >> "$GITHUB_OUTPUT"
-          echo "README atualizado: v${current} → v${new}"
 
       - name: Commit and push changes
         run: |

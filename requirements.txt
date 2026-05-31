@@ -1,9 +1,6 @@
-colorthief==0.2.1
-firebase-admin==6.5.0
-Flask==3.0.3
-flask-cors==4.0.1
-lxml==5.3.0
-pillow==10.4.0
-requests==2.32.3
-ytmusicapi==1.10.3
-python-dotenv==1.0.1
+colorthief
+firebase-admin
+Pillow
+python-dotenv
+requests
+ytmusicapi

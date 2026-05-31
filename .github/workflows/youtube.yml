@@ -1,0 +1,89 @@
+name: Update YouTube Music Card
+
+on:
+  # Executa a cada 5 minutos.
+  # Limite do GitHub Actions: mínimo 1 minuto, mas runs muito frequentes
+  # podem ser atrasadas em repositórios com baixa atividade.
+  schedule:
+    - cron: '*/15 * * * *'
+
+  # Permite disparar manualmente pelo painel do GitHub.
+  workflow_dispatch:
+
+jobs:
+  update-card:
+    runs-on: ubuntu-latest
+
+    # Permissão de escrita no repositório (necessária para o commit do README).
+    permissions:
+      contents: write
+
+    steps:
+      # ------------------------------------------------------------------
+      # 1. Checkout
+      # ------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      # 2. Python
+      # ------------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ------------------------------------------------------------------
+      # 3. Preparar credenciais a partir das secrets
+      #
+      #    As secrets são strings JSON armazenadas como variáveis de
+      #    ambiente no GitHub. Aqui as gravamos em arquivos temporários
+      #    para que o script Python possa lê-las como caminhos de arquivo.
+      # ------------------------------------------------------------------
+      - name: Write Firebase credentials file
+        run: echo '${{ secrets.FIREBASE_CREDENTIALS_JSON }}' > firebase_credentials.json
+
+      - name: Write YTMusic browser auth file
+        run: echo '${{ secrets.YTMUSIC_BROWSER_JSON }}' > ytmusic_browser.json
+
+      # ------------------------------------------------------------------
+      # 4. Executar o script
+      # ------------------------------------------------------------------
+      - name: Run update script
+        env:
+          FIREBASE_CREDENTIALS: ./firebase_credentials.json
+          FIREBASE_BUCKET:      ${{ secrets.FIREBASE_BUCKET }}
+          YTMUSIC_BROWSER:      ./ytmusic_browser.json
+        run: python update_card.py
+
+      # ------------------------------------------------------------------
+      # 5. Bump do versionamento no README para quebrar cache do GitHub
+      #
+      #    O GitHub (e a maioria dos CDNs) faz cache agressivo de imagens.
+      #    Incrementar um query param ?v=N força o re-fetch sem alterar a
+      #    URL permanente do Firebase.
+      # ------------------------------------------------------------------
+      - name: Increment README cache-buster
+        id: bump_version
+        run: |
+          current=$(grep -oP '(?<=alt=media&v=)\d+' README.md 2>/dev/null || echo "0")
+          new=$((current + 1))
+          sed -i "s/alt=media&v=${current}/alt=media\&v=${new}/" README.md
+          echo "new_version=${new}" >> "$GITHUB_OUTPUT"
+          echo "README atualizado: v${current} → v${new}"
+
+      # ------------------------------------------------------------------
+      # 6. Commit e push (só se houver mudança)
+      # ------------------------------------------------------------------
+      - name: Commit and push changes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          # Só commita se houver algo staged
+          git diff --cached --quiet || git commit -m "chore: bump SVG cache-buster to v${{ steps.bump_version.outputs.new_version }}"
+          git push

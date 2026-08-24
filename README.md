@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="https://firebasestorage.googleapis.com/v0/b/music-profile-aaae2.firebasestorage.app/o/listening-on-ytmusic.svg?alt=media&v=1285" alt="Now Listening"/>
+  <img src="https://firebasestorage.googleapis.com/v0/b/music-profile-aaae2.firebasestorage.app/o/listening-on-ytmusic.svg?alt=media&v=1286" alt="Now Listening"/>
 </p>
 
 ---

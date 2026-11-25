@@ -2,12 +2,15 @@
 .env
 browser.json
 firebase-credentials.json
+*.pem
+*.key
  
 # SVGs gerados automaticamente (não precisam ser versionados)
 themes/*_UPDATED.svg
  
 # Python
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
@@ -15,5 +18,7 @@ __pycache__/
 .Python
  
 # IDEs
+.DS_Store
+Thumbs.db
 .vscode/
 .idea/
